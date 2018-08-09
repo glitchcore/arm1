@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)http://visual6502.org/sim/varm/armgl.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>ARM1 Gate-level Simulation</title>
+    <style>
+    div.ms {
+      background-color:white;
+      font-family:monospace;
+      font-size:medium;
+      margin-left:10px; 
+      padding-top:2px;
+      padding-bottom:2px;
+    }
+    </style>
+    <script type="text/javascript">
+      // Provide the armgpu namespace
+      armgpu = {};
+    </script>
+    <script type="text/javascript" src="js/bind.js"></script>
+    <script type="text/javascript" src="js/dragger.js"></script>
+    <script type="text/javascript" src="js/armgl.js"></script>
+    <script type="text/javascript" src="js/vector3.js"></script>
+    <script type="text/javascript" src="js/chipsim.js"></script>
+    <script type="text/javascript" src="js/macros.js"></script>
+    <script type="text/javascript" src="js/ffdefs.js"></script>
+    <script type="text/javascript" src="js/transdefs.js"></script><style></style>
+    <script type="text/javascript" src="js/nodenames.js"></script>
+    <script type="text/javascript" src="js/support.js"></script>
+    <script type="text/javascript" src="js/displaynames.js"></script>
+
+    <script id="vsh_chip_state" type="x-shader/x-vertex">
+    attribute vec4 va_position;
+    attribute vec2 va_texCoord0;
+    uniform   mat4 vu_mvp;
+    varying   vec2 v_tex;
+    void main()                                  
+    {                                            
+       v_tex.xy = va_texCoord0.xy;                      
+       gl_Position = vu_mvp * va_position;
+    }
+    </script>
+
+    <script id="fsh_chip_state" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec2 v_tex;
+    uniform sampler2D t_state;
+    uniform sampler2D t_layerColors;
+    void main()
+    {
+      vec4 state = texture2D(t_state, v_tex);
+      vec2 colCoord;
+      colCoord.x = floor(v_tex.x) / 8.0 + 0.01;
+      colCoord.y = state.x + 0.01;
+      gl_FragColor = texture2D(t_layerColors, colCoord);
+    }
+    </script>
+
+    <script id="vsh_chip_state_stipple" type="x-shader/x-vertex">
+    attribute vec4 va_position;
+    attribute vec2 va_texCoord0;
+    uniform   mat4 vu_mvp;
+    varying   vec2 v_tex;
+    void main()                                  
+    {
+       v_tex.xy = va_texCoord0.xy;
+       gl_Position = vu_mvp * va_position;
+    }
+    </script>
+
+    <script id="fsh_chip_state_stipple" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec2 v_tex;
+    uniform sampler2D t_state;
+    uniform sampler2D t_layerColors;
+    uniform float fu_stippleOffset;
+    uniform float fu_stippleFac;
+    void main()
+    {
+      vec4 state = texture2D(t_state, v_tex);
+      vec2 colCoord;
+      colCoord.x = floor(v_tex.x) / 8.0 + 0.01;
+      colCoord.y = state.x + 0.01;
+      gl_FragColor = texture2D(t_layerColors, colCoord);
+//      float modCoord = gl_FragCoord[0] + gl_FragCoord[1] + fu_stippleOffset;
+      float modCoord = floor(gl_FragCoord[0]*fu_stippleFac) +
+                       floor(gl_FragCoord[1]*fu_stippleFac) + fu_stippleOffset;
+      if (mod(modCoord, 2.0) < 0.5) {
+        discard;
+      }
+    }
+    </script>
+
+    <script type="text/javascript" src="js/webgl-utils.js"></script>
+    <script type="text/javascript" src="js/initShaders.js"></script>
+    <script type="text/javascript" src="js/MV.js"></script>
+    <script type="text/javascript" src="js/geom.js"></script>
+
+  </head>
+    <body id="bodyId" onload="onLoadArm()" onunload="teardown()">
+    <div id="mainlefthalf">
+      <div id="armgpu_view" style="
+        background: gray;
+        position: absolute;
+        border: 2px solid gray;
+        width: 700px;
+        height:690px;
+        overflow: hidden;">
+        <canvas id="gl-canvas" width="800" height="800">
+        Sorry, your browser doesn't support the HTML5 canvas element
+        </canvas>
+      </div>
+    </div>
+    <div id="paneltop" style="
+        position: absolute;
+        border: 2px;
+        left: 720px;
+        overflow: hidden;">
+    <div class="buttons" id="buttons">
+      <div style="float:left;margin-top:10px; margin-right:1em; margin-left:1em;">
+      <div style="position:relative; float:left;">
+        <a href="javascript:stopChip()" id="stop" style="visibility: hidden;">
+          <img class="navstop" style="width:24px; position:absolute" src="img/stop.png"></a>
+        <a href="javascript:runChip()" id="start" style="visibility: visible;">
+          <img class="navplay" style="position:relative" src="img/play.png"></a>
+      </div>
+      <div style="float:left;margin-right:1em;margin-left:5px;">
+        <a href="javascript:resetChip()">
+          <img class="navbutton" src="img/up.png"></a>
+        <a href="javascript:stepForward()">
+          <img class="navbutton" src="img/next.png"></a>
+      </div>
+     <div style="float:left; margin-right:1em;">
+      <input type="button" onclick="popoutChip()" id="monitor" value="Pop out">
+      <input type="button" onclick="toggleColor()" id="toggleColor" value="Color">
+      <input type="button" onclick="toggleFast()" id="toggleFast" value="Fast">
+      <input name="memory_input" id="memory_input" type="file"/>
+     </div>
+     </div>
+    </div> <!-- buttons -->
+    <div style="clear:both;">
+    </div>
+    <!-- inner replaced in support.js setupFrontPanel -->
+    <div id="frontpaneldiv" style="font-size:small;">
+      <div class="ms" id="status"><br/><br/></div>
+      <div class="ms">
+        <table style="border-collapse:collapse;" id="pins"><tbody>
+          <tr style="border-top:thin solid white;">
+            <td class="oddrow" style="border-right:thin solid white;">phi1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">phi2</td>
+            <td class="oddrow" style="border-right:thin solid white;">ale</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">abe</td>
+            <td class="oddrow" style="border-right:thin solid white;">dbe</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">abrt</td>
+            <td class="oddrow" style="border-right:thin solid white;">irq</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">firq</td>
+            <td style="border-right:thin solid white;">reset</td>
+            <td class="oddcol" style="border-right:thin solid white;">seq</td>
+            <td style="border-right:thin solid white;">m0</td>
+            <td class="oddcol" style="border-right:thin solid white;">m1</td>
+            <td style="border-right:thin solid white;">bw</td>
+            <td class="oddcol" style="border-right:thin solid white;">rw</td>
+            <td style="border-right:thin solid white;">opc</td>
+            <td class="oddcol" style="border-right:thin solid white;">mreq</td>
+            <td style="border-right:thin solid white;">tran</td>
+          </tr>
+          <tr style="font-family:monospace;">
+            <td class="oddrow" style="border-right:thin solid white;">0</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">0</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">1</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">0</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">1</td>
+            <td class="oddrow" style="border-right:thin solid white;">0</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">0</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">1</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">0</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">1</td>
+            <td class="oddrow" style="border-right:thin solid white;">1</td>
+          </tr>
+
+        </tbody></table>
+      </div>
+      <div class="ms">
+        <table style="border-collapse:collapse;" id="registers"><tbody>
+          <tr style="border-top:thin solid white;">
+            <td class="oddcol" style="border-right:thin solid white;">r0</td>
+            <td style="border-right:thin solid white;">r1</td>
+            <td class="oddcol" style="border-right:thin solid white;">r2</td>
+            <td style="border-right:thin solid white;">r3</td>
+            <td class="oddcol" style="border-right:thin solid white;">r4</td>
+            <td style="border-right:thin solid white;">r5</td>
+            <td class="oddcol" style="border-right:thin solid white;">r6</td>
+          </tr>
+          <tr style="font-family:monospace;">
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+          </tr>
+
+          <tr style="border-top:thin solid white;">
+            <td class="oddcol" style="border-right:thin solid white;">r7</td>
+            <td style="border-right:thin solid white;">r8</td>
+            <td class="oddcol" style="border-right:thin solid white;">r9</td>
+            <td style="border-right:thin solid white;">r10</td>
+            <td class="oddcol" style="border-right:thin solid white;">r11</td>
+            <td style="border-right:thin solid white;">r12</td>
+            <td class="oddcol" style="border-right:thin solid white;">r13</td>
+          </tr>
+          <tr style="font-family:monospace;">
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+            <td style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddcol" style="border-right:thin solid white;">ffffffff</td>
+          </tr>
+
+          <tr style="border-top:thin solid white;">            
+            <td class="oddcol" style="border-right:thin solid white;">link</td>
+            <td class="" style="border-right:thin solid white;">PC</td>
+            <td class="oddcol" style="border-right:thin solid white;">r14_svc</td>
+            <td class="" style="border-right:thin solid white;">r13_svc</td>
+            <td class="oddcol" style="border-right:thin solid white;">r14_irq</td>
+            <td style="border-right:thin solid white;">r13_irq</td>
+            <td class="oddcol" style="border-right:thin solid white;">r10_fiq</td>
+          </tr>
+          <tr style="font-family:monospace;">
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+          </tr>
+
+          <tr style="border-top:thin solid white;">
+            <td class="oddrow" style="border-right:thin solid white;">r14_fiq</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">r13_fiq</td>
+            <td class="oddrow" style="border-right:thin solid white;">r12_fiq</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">r11_fiq</td>
+          </tr>
+          <tr style="font-family:monospace;">
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrow" style="border-right:thin solid white;">ffffffff</td>
+            <td class="oddrowcol" style="border-right:thin solid white;">ffffffff</td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+    <p> Memory </p>
+    <div id="memtablepanel" style="font-family:monospace;"></div>
+    <div class="ms" id="status-dbg">
+      <p id="msg">© <a href="http://visual6502.org/">Visual6502.org</a></p>
+      <p id="nodes-dbg"></p>
+      <p id="msg2"></p>
+    </div>
+   </div> <!-- paneltop -->
+</body></html>
