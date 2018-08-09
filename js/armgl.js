@@ -58,6 +58,13 @@ armgpu.Application.prototype.onLoad = function() {
         //addInner('camera-dbg', ' ' + strn);
         onKeyUp(strn, code);
     }
+
+    var memoryInput = document.getElementById('memory_input');
+    memoryInput.addEventListener('change', uploadMemory);
+
+    memoryInput.onclick = function() {
+        this.value = null;
+    }
 }
 
 function MouseWheelHandler(e) {

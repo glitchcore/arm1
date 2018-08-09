@@ -251,16 +251,21 @@ function mRead(a){
 
 function mWrite(a, d){
     var wordAddress = Math.floor(a/4);
-
-    if(isPadHigh('bw')){
-        memory[wordAddress]=d;
+    if(a != 0x0000ff00) {
+        console.log("write to address", hex(a));
+        if(isPadHigh('bw')){
+            memory[wordAddress]=d;
+        } else {
+            var oldVal = memory[wordAddress];
+            var shift = ((a&3)*8);
+            var mask = 0xff<<shift;         
+            var newVal = d&mask;
+            oldVal = oldVal & ~mask;
+            memory[wordAddress] = (newVal+oldVal);
+        }
     } else {
-        var oldVal = memory[wordAddress];
-        var shift = ((a&3)*8);
-        var mask = 0xff<<shift;         
-        var newVal = d&mask;
-        oldVal = oldVal & ~mask;
-        memory[wordAddress] = (newVal+oldVal);
+        console.log("write to tty:", d);
+        tty += String.fromCharCode(d);
     }
 }
 
@@ -286,6 +291,7 @@ function stopChip(){
 function resetChip(){
     stopChip();
     setStatus('resetting ' + chipname + '...');
+    tty = "";
     setTimeout(initChip,0);
 }
 

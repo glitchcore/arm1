@@ -16,6 +16,8 @@ var FrontPanelDiv;
 var PopoutFrontPanelDiv;
 var Popoutstatbox;
 
+var tty = "";
+
 var selected; // for the memory editor
 
 var logThese=[];
@@ -304,7 +306,9 @@ function updateMemoryTable(){
         base = base + width;
     }
 
-    MemoryTable.innerHTML = memrow.join("<br/>");
+    MemoryTable.innerHTML = memrow.join("<br/>") + "<br/><br/>>" + tty;
+    
+    /*
     var rows = MemoryTable.childNodes[0].childNodes;
     for(var i = 0; i < rows.length; i++){
         var row = rows[i].childNodes;
@@ -318,6 +322,7 @@ function updateMemoryTable(){
             }
         }
     }
+    */
 }
 
 // each memory cell is sensitive to a mouse click, which then directs
@@ -615,13 +620,27 @@ function teardown(){
     if(typeof(FrontPanelWindow) != "undefined") FrontPanelWindow.close();
 }
 
-function uploadMemory() {
-    alert("load file");
-}
+function uploadMemory(evt) {
+    var files = evt.target.files;
+    var file = files[0];
 
-var memoryInput = document.getElementsByName('memory_input');
-console.log(memoryInput);
-memoryInput[0].addEventListener('change', uploadMemory);
+    var reader = new FileReader();
+    reader.onloadend = function(evt) {
+        if (evt.target.readyState == FileReader.DONE) {
+            console.log("read result:", evt.target.result);
+            var data = new Uint32Array(evt.target.result);
+
+            for(var i = 0; i < data.length; i++) {
+                console.log(i, hex(data[i]));
+                memory[i] = data[i];
+            }
+
+            updateMemoryTable();
+        }
+    };
+
+    reader.readAsArrayBuffer(file);
+}
 
 /* shifter demo program
 
