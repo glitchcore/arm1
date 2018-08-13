@@ -280,7 +280,7 @@ function mWrite(a, d){
         }
     } else {
         console.log("write to tty:", hex(d));
-        tty += String.fromCharCode(d);
+        tty += String.fromCharCode(d & 0xFF);
     }
 }
 

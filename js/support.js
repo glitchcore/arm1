@@ -7,7 +7,7 @@
 var chipname='ARM1';
 var chipsize=30000;
 
-var memorySize = 384;
+var memorySize = 512;
 
 var ChipWindow = null;
 var MemoryTable;
