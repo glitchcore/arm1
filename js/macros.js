@@ -110,7 +110,10 @@ function initChip(){
     setPadHigh('dbe');
     setPadHigh('abe');
     setPadHigh('reset');
-    for(var i=0;i<8;i++){setPadHigh('phi1'); setPadLow('phi1'); setPadHigh('phi2'); setPadLow('phi2');}
+    for(var i=0;i<8;i++){
+        setPadHigh('phi1'); setPadLow('phi1');
+        setPadHigh('phi2'); setPadLow('phi2');
+    }
     setPadLow('reset');
     //refresh();
     armgpu.appInstance.setNodes();
@@ -136,8 +139,16 @@ function step(){
 // simulate a single clock phase with no update to graphics or trace
 function halfStep(){
     var clk = isPadHigh('phi1');
-    if (clk) {setPadLow('phi1'); setPadHigh('phi2');  } 
-    else { setPadLow('phi2'); handleBusRead(); setPadHigh('phi1'); handleBusWrite();}
+    if (clk) {
+        setPadLow('phi1');
+        setPadHigh('phi2');
+    } 
+    else {
+        setPadLow('phi2');
+        handleBusRead();
+        setPadHigh('phi1');
+        handleBusWrite();
+    }
 }
 
 function isPadHigh(name){
@@ -246,7 +257,11 @@ function writeDataBus(x){
 
 function mRead(a){
     if(typeof memory[Math.floor(a/4)] == "undefined") return 0xea0000ff;
-    else return memory[Math.floor(a/4)];   
+    var addr = Math.floor(a/4);
+    var res = memory[addr];
+    console.log("read ", a, "[",addr,"]", "->", hex(res));
+
+    return res;
 }
 
 function mWrite(a, d){
@@ -254,7 +269,7 @@ function mWrite(a, d){
     if(a != 0x0000ff00) {
         console.log("write to address", hex(a));
         if(isPadHigh('bw')){
-            memory[wordAddress]=d;
+            memory[wordAddress] = d;
         } else {
             var oldVal = memory[wordAddress];
             var shift = ((a&3)*8);
@@ -264,7 +279,7 @@ function mWrite(a, d){
             memory[wordAddress] = (newVal+oldVal);
         }
     } else {
-        console.log("write to tty:", d);
+        console.log("write to tty:", hex(d));
         tty += String.fromCharCode(d);
     }
 }

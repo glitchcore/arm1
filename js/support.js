@@ -7,6 +7,8 @@
 var chipname='ARM1';
 var chipsize=30000;
 
+var memorySize = 384;
+
 var ChipWindow = null;
 var MemoryTable;
 var FrontPanelWindow;
@@ -292,7 +294,7 @@ function updateMemoryTable(){
     var memrow = [];
     var base = 0;
     var width = memoryTableWidth;
-    var height = 8;
+    var height = memorySize/memoryTableWidth/4;
     for(var y = 0; y < height; y++){
         memrow.push(
             ["0x" + hex(base*4)+":"]
@@ -301,28 +303,12 @@ function updateMemoryTable(){
                     .map(hex)
                     .map(function(x) {return chunk(x, 2);})
             )
-            .join("  ")
+            .join(" _ ")
         );
         base = base + width;
     }
 
-    MemoryTable.innerHTML = memrow.join("<br/>") + "<br/><br/>>" + tty;
-    
-    /*
-    var rows = MemoryTable.childNodes[0].childNodes;
-    for(var i = 0; i < rows.length; i++){
-        var row = rows[i].childNodes;
-        rows[i].style.fontFamily="monospace";
-        if ((typeof row != "undefined") && row.length > 1){
-            for(var j = 1; j < row.length; j++){
-                var cell = row[j];
-                // we allow editting by attaching a handler to each memory cell
-                cell.addr = i*memoryTableWidth+j-1
-                cell.onmousedown = function(e){handleCellClick(e);};
-            }
-        }
-    }
-    */
+    MemoryTable.innerHTML = ">" + tty + "<br/><br/>" + memrow.join("<br/>");
 }
 
 // each memory cell is sensitive to a mouse click, which then directs
@@ -635,6 +621,11 @@ function uploadMemory(evt) {
                 memory[i] = data[i];
             }
 
+            // ensure all the displayed memory cells are initialised
+            for(var i = data.length; i < memorySize; i++) {
+                memory[i] = 0;
+            }
+
             updateMemoryTable();
         }
     };
@@ -642,56 +633,11 @@ function uploadMemory(evt) {
     reader.readAsArrayBuffer(file);
 }
 
-/* shifter demo program
-
-   @ for coding reference see http://www.bravegnu.org/gnu-eprog/asm-directives.html
-   @ and http://www.peter-cockerell.net/aalp/
-   @
-   @ to build use
-   @   as   -o shifter.o shifter.s
-   @   objdump -d shifter.o
-
-   .text
-   mov     r1, pc        @ inspect status and mode
-   mov     r2, #12
-   movs    pc, r2
-   nop
-   nop
-   mov     r2, #1        @ initial distance to shift
-   mov     r1, #15       @ constant value to shift
-   ldr     r3, pointer
-   loop:
-   ror     r0, r1, r2
-   add     r2, r2, #1
-   str     r0, [r3], #4  @ write to results array
-   b       loop
-   pointer:
-   .word results
-   results:
-   .word 0xaa55aa55
-
-*/
 var userCode = [];
 
-var memory = Array(
-    0xE1A0100F, // mov     r1, pc        @ inspect status and mode
-    0xE3A0200C, // mov     r2, #12
-    0xE1B0F002, // movs    pc, r2
-    0xE1A00000, // nop
-    0xE1A00000, // nop
-    0xE3A02001, // mov     r2, #1        @ initial distance to shift
-    0xE3A0100F, // mov     r1, #15       @ constant value to shift
-    0xE59F300C, // ldr     r3, pointer
-    0xE1A00271, // ror     r0, r1, r2
-    0xE2822001, // add     r2, r2, #1
-    0xE4830004, // str     r0, [r3], #4  @ write to results array
-    0xEAFFFFFB, // b       loop
-    0x00000034, // .word results
-    0xAA55AA55  // .word 0xaa55aa55
-);
-
-//var memory = Array(
-//0xE1A0100F,0xE3A0200C,0xE1B0F002,0xE1A00000,0xE1A00000,0xE59F3018,0xE3A00000,0xE3A01001,0xE0802001,0xE1A00001,0xE1A01002,0xE4C31001,0xEAFFFFFA,0x00000038,0xAA55AA55);
+var memory = Array(memorySize);
 
 // ensure all the displayed memory cells are initialised
-for(var i=memory.length; i<32; i++)memory[i] = 0;
+for(var i=memory.length; i < memorySize; i++) {
+    memory[i] = 0;
+}
