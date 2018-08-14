@@ -7,16 +7,24 @@
 var chipname='ARM1';
 var chipsize=30000;
 
-var memorySize = 512;
+var memorySize = 1024;
+var frameSize = 128;
 
 var ChipWindow = null;
 var MemoryTable;
+var TtyRow;
+
+var canvas;
+var ctx;
+
 var FrontPanelWindow;
 var ChipPinTable;
 var RegisterTable;
 var FrontPanelDiv;
 var PopoutFrontPanelDiv;
 var Popoutstatbox;
+
+var ttyAddress = 0x0000ff00;
 
 var tty = "";
 
@@ -271,8 +279,15 @@ function handleChipResize(e){
 function setupMemoryTable(){
         // initially we direct ourselves to the docked-in memory table
         MemoryTable = document.getElementById('memtablepanel');
+        TtyRow = document.getElementById('ttyrow');
+        FrameBuffer = document.getElementById('framebuffer');
+
+        canvas = document.getElementById("canvas_main");
+        ctx = canvas.getContext('2d');
+
         // create and display the memory table
         updateMemoryTable();
+        updateCanvas();
 }
 
 var memoryTableWidth = 4;
@@ -287,7 +302,7 @@ function chunk(value, size) {
         res.push(value.slice(i * size, (i + 1) * size).join(""))
     }
 
-    return res.join(" ");
+    return res.join("_");
 }
 
 function updateMemoryTable(){
@@ -303,12 +318,83 @@ function updateMemoryTable(){
                     .map(hex)
                     .map(function(x) {return chunk(x, 2);})
             )
-            .join(" _ ")
+            .join(" ")
         );
         base = base + width;
     }
 
-    MemoryTable.innerHTML = ">" + tty + "<br/><br/>" + memrow.join("<br/>");
+    MemoryTable.innerHTML = memrow.join("<br/>");
+
+    TtyRow.innerHTML = ">" + tty + "<br/>";
+
+    FrameBuffer.innerHTML = framebuffer.map(v => JSON.stringify(parseVector(v))).join("<br/>");
+}
+
+function parseVector(vector) {
+    if(vector === 0) return {cmd: "eof"};
+
+    var cmd = "eof";
+    var color = "#000000";
+
+    switch ((vector >> 24) & 0x0f) {
+        case 1: cmd = "move"; break;
+        case 2: cmd = "line"; break;
+        case 3: cmd = "circle"; break;
+    }
+
+    switch ((vector >> 28) & 0x0f) {
+        case 1: color = "#000000"; break;
+        case 2: color = "#ffffff"; break;
+        case 3: color = "#ff3333"; break;
+        case 4: color = "#33ff33"; break;
+        case 5: color = "#3333ff"; break;
+    }
+
+    return {
+        cmd: cmd,
+        color: color,
+        x: (vector >> 16) & 0xff,
+        y: (vector >> 8) & 0xff,
+        r: (vector >> 0) & 0xff,
+    }
+}
+
+const scale = 2;
+
+function clearFrame() {
+    for(var i = 0; i < frameSize; i++) {
+        framebuffer[i] = 0;
+    }
+
+    updateCanvas();
+}
+
+function updateCanvas() {
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#33ff33";
+
+    var idx = 0;
+
+    while (framebuffer[idx]) {
+        var cmd = parseVector(framebuffer[idx]);
+        console.log("cmd:", cmd);
+
+        ctx.strokeStyle = cmd.color;
+        ctx.lineWidth = 3;
+
+        switch(cmd.cmd) {
+            case "move": ctx.moveTo(cmd.x * scale, cmd.y * scale); break;
+            case "line": ctx.lineTo(cmd.x * scale, cmd.y * scale); break;
+            default: break;
+        }
+
+        idx++;
+    };
+
+    ctx.stroke(); 
 }
 
 // each memory cell is sensitive to a mouse click, which then directs
@@ -638,6 +724,13 @@ var userCode = [];
 var memory = Array(memorySize);
 
 // ensure all the displayed memory cells are initialised
-for(var i=memory.length; i < memorySize; i++) {
+for(var i = 0; i < memorySize; i++) {
     memory[i] = 0;
+}
+
+var framebuffer = Array(frameSize);
+
+// ensure all the displayed memory cells are initialised
+for(var i = 0; i < frameSize; i++) {
+    framebuffer[i] = 0;
 }

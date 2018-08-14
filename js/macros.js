@@ -265,22 +265,43 @@ function mRead(a){
 }
 
 function mWrite(a, d){
-    var wordAddress = Math.floor(a/4);
-    if(a != 0x0000ff00) {
-        console.log("write to address", hex(a));
-        if(isPadHigh('bw')){
-            memory[wordAddress] = d;
-        } else {
-            var oldVal = memory[wordAddress];
-            var shift = ((a&3)*8);
-            var mask = 0xff<<shift;         
-            var newVal = d&mask;
-            oldVal = oldVal & ~mask;
-            memory[wordAddress] = (newVal+oldVal);
-        }
-    } else {
+    if(a == ttyAddress) {
         console.log("write to tty:", hex(d));
         tty += String.fromCharCode(d & 0xFF);
+        return;
+    }
+
+    if(a > ttyAddress) {
+        if(a % 4 != 0) console.error("address must be align to 4");
+
+        var frame_a = a - ttyAddress - 16;
+        console.log("write to framebuffer", hex(frame_a), d);
+        framebuffer[Math.floor(frame_a/4)] = d;
+
+        if(d === 0) {
+            console.log("update framebuffer");
+            updateCanvas();
+        }
+
+        return;
+    }
+
+    var wordAddress = Math.floor(a/4);
+
+    if(isPadHigh('bw')){
+        if(a > ttyAddress) {
+            
+        } else {
+            console.log("write to address", hex(a));
+            memory[wordAddress] = d;
+        }
+    } else {
+        var oldVal = memory[wordAddress];
+        var shift = ((a&3)*8);
+        var mask = 0xff<<shift;         
+        var newVal = d&mask;
+        oldVal = oldVal & ~mask;
+        memory[wordAddress] = (newVal+oldVal);
     }
 }
 
@@ -307,6 +328,7 @@ function resetChip(){
     stopChip();
     setStatus('resetting ' + chipname + '...');
     tty = "";
+    clearFrame();
     setTimeout(initChip,0);
 }
 

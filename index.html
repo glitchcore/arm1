@@ -11,6 +11,33 @@
       padding-top:2px;
       padding-bottom:2px;
     }
+
+    .korpus > div, .korpus > input {
+      display: none;
+    }
+
+    .korpus label {
+      padding: 5px;
+      border: 1px solid #aaa;
+      line-height: 28px;
+      cursor: pointer;
+      position: relative; 
+      bottom: 1px;
+      background: #fff; 
+    }
+
+    .korpus input[type="radio"]:checked + label {
+      border-bottom: 2px solid #fff;
+    }
+
+    .korpus > input:nth-of-type(1):checked ~ div:nth-of-type(1),
+    .korpus > input:nth-of-type(2):checked ~ div:nth-of-type(2),
+    .korpus > input:nth-of-type(3):checked ~ div:nth-of-type(3) {
+      display: block;
+      padding: 5px;
+      border: 1px solid #aaa;
+    }
+
     </style>
     <script type="text/javascript">
       // Provide the armgpu namespace
@@ -130,8 +157,8 @@
           <img class="navbutton" src="img/next.png"></a>
       </div>
      <div style="float:left; margin-right:1em;">
-      <input type="button" onclick="popoutChip()" id="monitor" value="Pop out">
-      <input type="button" onclick="toggleColor()" id="toggleColor" value="Color">
+      <!-- <input type="button" onclick="popoutChip()" id="monitor" value="Pop out">
+      <input type="button" onclick="toggleColor()" id="toggleColor" value="Color"> -->
       <input type="button" onclick="toggleFast()" id="toggleFast" value="Fast">
       <input name="memory_input" id="memory_input" type="file"/>
      </div>
@@ -260,9 +287,24 @@
       </div>
     </div>
     <br/>
-    <div id="memtablepanel" style="font-family:monospace;"></div>
+    <div id="ttyrow" style="font-family:monospace;"></div>
+    <div class="korpus">
+      <input type="radio" name="odin" checked="checked" id="vkl1"/><label for="vkl1">Memory</label><input type="radio" name="odin" id="vkl2"/><label for="vkl2">Framebuffer</label><input type="radio" name="odin" id="vkl3"/><label for="vkl3">Display</label>
+      <div>
+        <div id="memtablepanel" style="font-family:monospace;overflow-y: scroll;height:350px;"></div>
+      </div>
+      <div>
+        <div id="framebuffer" style="font-family:monospace;overflow-y: scroll;height:350px;">
+        </div>
+      </div>
+      <div>
+        <canvas height='350' width='490' id = "canvas_main"/>
+      </div>
+    </div>
+
+    
     <div class="ms" id="status-dbg">
-      <p id="msg">© <a href="http://visual6502.org/">Visual6502.org</a></p>
+      <p id="msg">Â© <a href="http://visual6502.org/">Visual6502.org</a></p>
       <p id="nodes-dbg"></p>
       <p id="msg2"></p>
     </div>
