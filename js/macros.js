@@ -64,6 +64,7 @@ function go() {
             userSteps=undefined;
         }
     }
+    
     if(running) {
         step();
         // schedule the next poll.  60 is pretty fast
@@ -88,15 +89,18 @@ function initChip(){
     nodes.forEach(function(n){
         n.state = false;
         n.switched = 0;
-        n.touched = 0;});
+        n.touched = 0;
+    });
 
     nodes[nvss].state = false;
     nodes[nvdd].state = true;
+
     transistors.forEach(function(t){
         if (t.gate >= 10000)return;
         t.on = (nodes[t.gate].state==t.active);
         t.touched = 0;
-        t.switched = 0;});
+        t.switched = 0;
+    });
 
     recalcNodeList(allNodes()); 
     setPadLow('abrt');
@@ -110,7 +114,8 @@ function initChip(){
     setPadHigh('dbe');
     setPadHigh('abe');
     setPadHigh('reset');
-    for(var i=0;i<8;i++){
+
+    for(var i=0;i<8;i++) {
         setPadHigh('phi1'); setPadLow('phi1');
         setPadHigh('phi2'); setPadLow('phi2');
     }
@@ -125,7 +130,7 @@ function initChip(){
 }
 
 // simulate a single clock phase, updating trace and highlighting layout
-function step(){
+function step() {
     //  var s=stateString();
     //  var m=getMem();
     //  trace[cycle]= {chip: s, mem: m};

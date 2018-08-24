@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0041)http://visual6502.org/sim/varm/armgl.html -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf8">
     <title>ARM1 Gate-level Simulation</title>
     <style>
     div.ms {
@@ -123,7 +123,7 @@
     <script type="text/javascript" src="js/geom.js"></script>
 
   </head>
-    <body id="bodyId" onload="onLoadArm()" onunload="teardown()">
+  <body id="bodyId" onload="onLoadArm()" onunload="teardown()">
     <div id="mainlefthalf">
       <div id="armgpu_view" style="
         background: gray;
@@ -142,28 +142,38 @@
         border: 2px;
         left: 720px;
         overflow: hidden;">
-    <div class="buttons" id="buttons">
-      <div style="float:left;margin-top:10px; margin-right:1em; margin-left:1em;">
-      <div style="position:relative; float:left;">
-        <a href="javascript:stopChip()" id="stop" style="visibility: hidden;">
-          <img class="navstop" style="width:24px; position:absolute" src="img/stop.png"></a>
-        <a href="javascript:runChip()" id="start" style="visibility: visible;">
-          <img class="navplay" style="position:relative" src="img/play.png"></a>
-      </div>
-      <div style="float:left;margin-right:1em;margin-left:5px;">
-        <a href="javascript:resetChip()">
-          <img class="navbutton" src="img/up.png"></a>
-        <a href="javascript:stepForward()">
-          <img class="navbutton" src="img/next.png"></a>
-      </div>
-     <div style="float:left; margin-right:1em;">
-      <!-- <input type="button" onclick="popoutChip()" id="monitor" value="Pop out">
-      <input type="button" onclick="toggleColor()" id="toggleColor" value="Color"> -->
-      <input type="button" onclick="toggleFast()" id="toggleFast" value="Fast">
-      <input name="memory_input" id="memory_input" type="file"/>
-     </div>
-     </div>
-    </div> <!-- buttons -->
+      <div class="buttons" id="buttons">
+        <div style="float:left;margin-top:10px; margin-right:1em; margin-left:1em;">
+
+          <div style="position:relative; float:left;">
+            <a href="javascript:stopChip()" id="stop" style="visibility: hidden;">
+              <img class="navstop" style="width:24px; position:absolute" src="img/stop.png">
+            </a>
+
+            <a href="javascript:runChip()" id="start" style="visibility: visible;">
+              <img class="navplay" style="position:relative" src="img/play.png">
+            </a>
+          </div>
+
+          <div style="float:left;margin-right:1em;margin-left:5px;">
+            <a href="javascript:resetChip()">
+              <img class="navbutton" src="img/up.png">
+            </a>
+            
+            <a href="javascript:stepForward()">
+              <img class="navbutton" src="img/next.png">
+            </a>
+          </div>
+
+          <div style="float:left; margin-right:1em;">
+            <!-- <input type="button" onclick="popoutChip()" id="monitor" value="Pop out">
+            <input type="button" onclick="toggleColor()" id="toggleColor" value="Color"> -->
+            <input type="button" onclick="toggleFast()" id="toggleFast" value="Fast">
+            <input name="memory_input" id="memory_input" type="file"/>
+          </div>
+
+        </div>
+      </div> <!-- buttons -->
     <div style="clear:both;">
     </div>
     <!-- inner replaced in support.js setupFrontPanel -->

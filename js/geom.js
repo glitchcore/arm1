@@ -301,7 +301,7 @@ function guardedRequestAnimFrame() {
 }
 
 function setVizNodeValues(nodes) {
-    //replaceInner('nodes-dbg', nodeValues.toString().slice(0,40));
+    // replaceInner('nodes-dbg', nodeValues.toString().slice(0,40));
     // TODO: tmp - no hilighting
     var hiliteNodeIndex = -1;
 
