@@ -339,7 +339,11 @@ function parseVector(vector) {
     switch ((vector >> 24) & 0x0f) {
         case 1: cmd = "move"; break;
         case 2: cmd = "line"; break;
-        case 3: cmd = "circle"; break;
+        case 3: cmd = "cw"; break;
+        case 4: cmd = "ccw"; break;
+        case 5: cmd = "extcw"; break;
+        case 6: cmd = "extccw"; break;
+
     }
 
     switch ((vector >> 28) & 0x0f) {
@@ -359,7 +363,7 @@ function parseVector(vector) {
     }
 }
 
-const scale = 2;
+const frame_scale = 2;
 
 function clearFrame() {
     for(var i = 0; i < frameSize; i++) {
@@ -369,6 +373,38 @@ function clearFrame() {
     updateCanvas();
 }
 
+function trueArcTo(ctx, x1, y1, x2, y2, r, sign, ext) {
+    var q = Math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
+
+    var x3 = (x1 + x2) / 2;
+    var y3 = (y1 + y2) / 2;
+
+    var xc = x3 + sign*Math.sqrt(r*r - ((q / 2) * (q / 2))) * ((y1 - y2) / q);
+    var yc = y3 + sign*Math.sqrt(r*r - ((q / 2) * (q / 2))) * ((x2 - x1) / q);
+
+    // console.log("center:", xc, yc);
+
+    var startAngle = Math.atan2(y1 - yc, x1 - xc);
+    var endAngle   = Math.atan2(y2 - yc, x2 - xc);
+
+    if(sign < 0 ^ ext !== 1) {
+        var t = endAngle;
+        endAngle = startAngle;
+        startAngle = t;
+    }
+
+    // startAngle = 0;
+    // endAngle = Math.PI*2;
+
+    ctx.beginPath();
+    ctx.arc(xc,yc, r, startAngle, endAngle);
+    ctx.stroke();
+
+    /* ctx.beginPath();
+    ctx.arc(xc,yc, 1, 0, Math.PI*2);
+    ctx.stroke(); */
+}
+
 function updateCanvas() {
     ctx.fillStyle = "#333333";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -376,20 +412,35 @@ function updateCanvas() {
     ctx.beginPath();
     ctx.strokeStyle = "#33ff33";
 
+    var prevX = 0;
+    var prevY = 0;
+
     var idx = 0;
 
     while (framebuffer[idx]) {
         var cmd = parseVector(framebuffer[idx]);
         console.log("cmd:", cmd);
 
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+
         ctx.strokeStyle = cmd.color;
         ctx.lineWidth = 3;
 
         switch(cmd.cmd) {
-            case "move": ctx.moveTo(cmd.x * scale, cmd.y * scale); break;
-            case "line": ctx.lineTo(cmd.x * scale, cmd.y * scale); break;
+            case "move": break;
+            case "line": ctx.lineTo(cmd.x * frame_scale, cmd.y * frame_scale); break;
+            case "cw": trueArcTo(ctx, prevX, prevY, cmd.x * frame_scale, cmd.y * frame_scale, cmd.r * frame_scale, 1, 1); break;
+            case "ccw": trueArcTo(ctx, prevX, prevY, cmd.x * frame_scale, cmd.y * frame_scale, cmd.r * frame_scale, -1, 1); break;
+            case "extcw": trueArcTo(ctx, prevX, prevY, cmd.x * frame_scale, cmd.y * frame_scale, cmd.r * frame_scale, -1, -1); break;
+            case "extccw": trueArcTo(ctx, prevX, prevY, cmd.x * frame_scale, cmd.y * frame_scale, cmd.r * frame_scale, 1, -1); break;
             default: break;
         }
+
+        ctx.stroke();
+
+        prevX = cmd.x * frame_scale;
+        prevY = cmd.y * frame_scale;
 
         idx++;
     };
