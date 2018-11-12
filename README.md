@@ -45,3 +45,7 @@ http://daveshacks.blogspot.com/2016/01/inside-armv1-read-bus-b-alu-output-bus.ht
 * Схема управления сдвигом и про команды http://daveshacks.blogspot.com/2016/01/inside-armv1-decoding-barrel-shifter.html
 * Схема управления АЛУ http://daveshacks.blogspot.com/2016/01/inside-arm1v-alu-control-logic.html
 * Еще про микрокод: http://daveshacks.blogspot.com/2016/01/inside-armv1-instruction-decoding-and.html
+
+## Благодарность
+
+This is my fork of http://www.visual6502.org/sim/varm/armgl.html simulator. I express my great appreciation to the `Visual 6502` team for their deveopment.
