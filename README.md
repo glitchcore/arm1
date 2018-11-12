@@ -49,3 +49,5 @@ http://daveshacks.blogspot.com/2016/01/inside-armv1-read-bus-b-alu-output-bus.ht
 ## Благодарность
 
 This is my fork of http://www.visual6502.org/sim/varm/armgl.html simulator. I express my great appreciation to the `Visual 6502` team for their deveopment.
+
+Если вас тоже впечатлила симуляция процессора, на странице http://visual6502.org/donate_cash.html можно задонатить этим ребятам.
